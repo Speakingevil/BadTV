@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -78,6 +78,7 @@ public class BTVScript : MonoBehaviour {
     public GameObject[] bosselements;
     public Renderer[] bossrends;
     public Material[] bossmats;
+    public TextMesh bossquote;
     public ParticleSystem bossfire;
 
     private string[] exempt;
@@ -792,6 +793,7 @@ public class BTVScript : MonoBehaviour {
                             }
                             else
                             {
+                                StopCoroutine("Silswitch");
                                 switch (b)
                                 {
                                     case 0:
@@ -801,7 +803,7 @@ public class BTVScript : MonoBehaviour {
                                             sildisps[silselect].fontSize = 200;
                                             sildisps[silselect].color = new Color(0, 200f / 255, 0);
                                             silselect--;
-                                            StartCoroutine(Silswitch(silselect));
+                                            StartCoroutine("Silswitch", silselect);
                                         }
                                         break;
                                     case 1:
@@ -811,7 +813,7 @@ public class BTVScript : MonoBehaviour {
                                             sildisps[silselect].fontSize = 200;
                                             sildisps[silselect].color = new Color(0, 200f / 255, 0);
                                             silselect -= 3;
-                                            StartCoroutine(Silswitch(silselect));
+                                            StartCoroutine("Silswitch", silselect);
                                         }
                                         break;
                                     case 2:
@@ -850,7 +852,7 @@ public class BTVScript : MonoBehaviour {
                                             sildisps[silselect].fontSize = 200;
                                             sildisps[silselect].color = new Color(0, 200f / 255, 0);
                                             silselect += 3;
-                                            StartCoroutine(Silswitch(silselect));
+                                            StartCoroutine("Silswitch", silselect);
                                         }
                                         break;
                                     case 4:
@@ -860,7 +862,7 @@ public class BTVScript : MonoBehaviour {
                                             sildisps[silselect].fontSize = 200;
                                             sildisps[silselect].color = new Color(0, 200f / 255, 0);
                                             silselect++;
-                                            StartCoroutine(Silswitch(silselect));
+                                            StartCoroutine("Silswitch", silselect);
                                         }
                                         break;
                                 }
@@ -1942,7 +1944,7 @@ public class BTVScript : MonoBehaviour {
             {
                 couelements[i].SetActive(true);
                 couelements[i].transform.localPosition = new Vector3(Random.Range(-3.9f, 3.9f), 0, Random.Range(-1.2f, 1.2f));
-                StartCoroutine(CouCritter(couelements[i].transform, courends[i], Random.Range(-0.007f, 0.007f), Random.Range(-0.007f, 0.007f), Random.Range(0.3f, 1f)));
+                StartCoroutine(CouCritter(couelements[i].transform, courends[i], Random.Range(-0.5f, 0.5f), Random.Range(-0.5f, 0.5f), Random.Range(0.3f, 1f)));
             }
             else
                 couelements[i].SetActive(false);
@@ -1994,7 +1996,7 @@ public class BTVScript : MonoBehaviour {
                 x *= -1;
             if (Mathf.Abs(c.localPosition.z) > 1.2f)
                 y *= -1;
-            c.localPosition += new Vector3(x, 0, y) * speed;
+            c.localPosition += new Vector3(x, 0, y) * speed * Time.deltaTime;
             yield return null;
         }
     }
@@ -2483,7 +2485,50 @@ public class BTVScript : MonoBehaviour {
             bossrends[4].material = bossmats[54];
             Audio.PlaySoundAtTransform("FailUltimate", transform);
             bossrends[2].enabled = true;
-            yield return new WaitForSeconds(8.5f);
+            yield return new WaitForSeconds(5);
+            bossrends[2].enabled = false;
+            bosselements[35].SetActive(true);
+            float e = 0;
+            if (bossstability <= 190)
+            {
+                bossrends[31].material = bossmats[62];
+                bossquote.text = "Combust deez nuts!";
+            }
+            else if (bossstability <= 260)
+            {
+                bossrends[31].material = bossmats[61];
+                bossquote.text = "Looks like you drew the short fuse!";
+            }
+            else if (bossstability <= 330)
+            {
+                bossrends[31].material = bossmats[60];
+                bossquote.text = "Your plans for beating me have\nblown up in your face!";
+            }
+            else
+                bossquote.text = "You failed to make this bomb go boom.\nYour weak attempt has sealed your doom!";
+            while(e < 0.5f)
+            {
+                e += Time.deltaTime;
+                bosselements[35].transform.localEulerAngles = new Vector3(0, Mathf.Lerp(155, 175, e * 2), 0);
+                yield return null;
+            }
+            float c = Mathf.Lerp(-3.481f, 3.481f, bossstability / 400f);
+            e = 0;
+            float d = 0;
+            int f = 0;
+            while(e < 3)
+            {
+                e += Time.deltaTime;
+                d += Time.deltaTime;
+                bosselements[36].transform.localPosition = new Vector3(Mathf.Lerp(3.481f, c, Mathf.Min(1, e)), 0.001f, 2.12f);
+                if(d >= 0.1f)
+                {
+                    d = 0;
+                    f ^= 1;
+                    bossrends[30].material = bossmats[58 + f];
+                }
+                yield return null;
+            }
             pass = false;
             screens[prompts.Length + 1].SetActive(false);
             StartCoroutine("Next");
@@ -2877,6 +2922,7 @@ public class BTVScript : MonoBehaviour {
                     Audio.PlaySoundAtTransform("SFXTransform", boss);
                     bossanim = 0;
                     bossdamage[1] = true;
+                    brend.material = bossmats[37];
                     yield return new WaitForSeconds(0.15f);
                     c = boss.localPosition.z;
                     e = 0;
@@ -3016,7 +3062,7 @@ public class BTVScript : MonoBehaviour {
                 for (int i = 16; i < 24; i++)
                 {
                     boss.material = bossmats[i];
-                    yield return new WaitForSeconds(Mathf.Lerp(0.03125f, 0.0625f, bossstability / 400));
+                    yield return new WaitForSeconds(0.03125f * (1 + (bossstability / 400)));
                 }
                 break;
             case 5:
